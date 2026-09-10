@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Join Live Class — LiveClass Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/student.css">
+</head>
+<body>
+
+<!-- ---------------------------- JOIN SCREEN ---------------------------- -->
+<div class="join-screen" id="joinScreen">
+  <div class="join-card card">
+    <div class="brand-mark" style="margin:0 auto 14px;">LC</div>
+    <h1>Join Live Class</h1>
+    <p class="muted" id="classPreview">Loading class…</p>
+
+    <div id="joinError"></div>
+
+    <form id="joinForm">
+      <div class="field">
+        <label for="studentName">Your Name</label>
+        <input type="text" id="studentName" required maxlength="40" placeholder="e.g. Rahul">
+      </div>
+      <div class="field">
+        <label for="classCode">Class Code</label>
+        <input type="text" id="classCode" required maxlength="6" style="text-transform:uppercase;letter-spacing:.15em;text-align:center;font-weight:700;">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="joinBtn">Join Class</button>
+    </form>
+  </div>
+</div>
+
+<!-- ---------------------------- LIVE VIEWER ---------------------------- -->
+<div class="viewer hidden" id="viewer">
+  <header class="viewer-top">
+    <div class="viewer-subject">
+      <b id="vSubject">Subject</b>
+      <span id="vClass" class="muted"></span>
+    </div>
+    <div class="viewer-status">
+      <span id="vConn" class="pill pill-live"><span class="dot"></span>LIVE</span>
+      <span id="vCount" class="muted">0 students</span>
+    </div>
+  </header>
+
+  <div class="viewer-tabs">
+    <span class="viewer-tab-label" id="vModeLabel">💻 Code</span>
+  </div>
+
+  <div class="viewer-stage" id="viewerStage">
+    <div class="stage-zoomable" id="stageZoomable">
+
+      <pre class="code-view hidden" id="codeView"><code id="codeViewInner"></code></pre>
+
+      <div class="notes-view hidden" id="notesView"></div>
+
+      <canvas class="wb-view hidden" id="wbView" width="1600" height="900"></canvas>
+
+    </div>
+  </div>
+
+  <div class="viewer-banner hidden" id="pausedBanner">⏸ The teacher has paused the class.</div>
+
+  <div class="zoom-controls">
+    <button class="btn-icon btn-ghost" id="zoomOut" title="Zoom out">−</button>
+    <span id="zoomLevel">100%</span>
+    <button class="btn-icon btn-ghost" id="zoomIn" title="Zoom in">+</button>
+    <button class="btn btn-ghost btn-sm" id="zoomFit">Fit to Screen</button>
+    <button class="btn btn-ghost btn-sm" id="zoomReset">Reset</button>
+  </div>
+</div>
+
+<div class="end-screen hidden" id="endScreen">
+  <div class="card end-card">
+    <h2 id="endTitle">Class has ended</h2>
+    <p class="muted" id="endMessage">Thanks for joining! Ask your teacher for the notes if they shared any.</p>
+    <a href="/" class="btn btn-primary">Back to Home</a>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs.min.css">
+<script src="/js/student.js"></script>
+</body>
+</html>

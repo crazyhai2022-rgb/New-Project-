@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LiveClass Board — Teacher Writes Once. Every Student Sees It Live.</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  body{ display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+  .landing{ width:100%; max-width:440px; }
+  .brand{ text-align:center; margin-bottom:28px; }
+  .brand-mark{
+    width:56px; height:56px; margin:0 auto 14px; border-radius:16px; background:var(--navy);
+    display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:26px; font-weight:700;
+  }
+  .brand h1{ font-size:24px; margin-bottom:4px; }
+  .brand p{ font-size:13.5px; color:var(--muted); }
+  .landing .card{ padding:28px; }
+  .join-alt{ text-align:center; margin-top:18px; font-size:13.5px; color:var(--muted); }
+  .join-alt a{ color:var(--navy); font-weight:700; }
+</style>
+</head>
+<body>
+<div class="landing">
+  <div class="brand">
+    <div class="brand-mark">LC</div>
+    <h1>LiveClass Board</h1>
+    <p>Teacher writes once. Every student sees it live.</p>
+  </div>
+
+  <div class="card">
+    <div id="formError"></div>
+    <form id="createForm">
+      <div class="field">
+        <label for="teacherName">Your Name</label>
+        <input type="text" id="teacherName" required placeholder="e.g. Mrs. Sharma" maxlength="80">
+      </div>
+      <div class="field">
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" required placeholder="e.g. C Programming" maxlength="80">
+      </div>
+      <div class="field">
+        <label for="className">Class</label>
+        <input type="text" id="className" placeholder="e.g. BCA 1st Year" maxlength="80">
+      </div>
+      <div class="field">
+        <label for="topic">Topic <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="topic" placeholder="e.g. Functions in C" maxlength="120">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="createBtn">Start Live Class</button>
+    </form>
+  </div>
+
+  <p class="join-alt">Joining as a student? Ask your teacher for the class link or QR code.</p>
+</div>
+
+<script>
+document.getElementById('createForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const btn = document.getElementById('createBtn');
+  const errBox = document.getElementById('formError');
+  errBox.innerHTML = '';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Creating…';
+
+  try {
+    const res = await fetch('/api/classes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        teacherName: document.getElementById('teacherName').value,
+        subject: document.getElementById('subject').value,
+        className: document.getElementById('className').value,
+        topic: document.getElementById('topic').value,
+      }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Could not create the class.');
+
+    sessionStorage.setItem('lcb_teacherName', document.getElementById('teacherName').value);
+    window.location.href = '/teach/' + data.code;
+  } catch (err) {
+    errBox.innerHTML = '<div class="alert alert-error">' + err.message + '</div>';
+    btn.disabled = false;
+    btn.textContent = 'Start Live Class';
+  }
+});
+</script>
+</body>
+</html>

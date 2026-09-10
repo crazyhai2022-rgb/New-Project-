@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Dashboard — LiveClass Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/teacher.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <aside class="side">
+    <div class="side-brand">
+      <div class="brand-mark">LC</div>
+      <span>LiveClass<b>Board</b></span>
+    </div>
+    <nav>
+      <a class="on"><i>▤</i>Live Class</a>
+    </nav>
+    <div class="side-status">
+      <span id="connStatus" class="pill pill-off"><span class="dot"></span>Connecting…</span>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <div class="topbar-info">
+        <h1 id="subjectTitle">Loading…</h1>
+        <span id="classSubtitle" class="muted"></span>
+      </div>
+      <div class="topbar-actions">
+        <span id="sessionPill" class="pill pill-live"><span class="dot"></span>LIVE</span>
+        <button class="btn btn-ghost btn-sm" id="pauseBtn">Pause Class</button>
+        <button class="btn btn-danger btn-sm" id="endBtn">End Class</button>
+      </div>
+    </header>
+
+    <div class="layout">
+
+      <section class="board-panel">
+
+        <div class="mode-tabs" role="tablist">
+          <button class="mode-tab on" data-mode="code">💻 Code</button>
+          <button class="mode-tab" data-mode="notes">📝 Notes</button>
+          <button class="mode-tab" data-mode="whiteboard">🖊 Whiteboard</button>
+        </div>
+
+        <!-- CODE MODE -->
+        <div class="mode-body" id="mode-code">
+          <div class="code-toolbar">
+            <select id="langSelect">
+              <option value="c">C</option>
+              <option value="cpp">C++</option>
+              <option value="java">Java</option>
+              <option value="python">Python</option>
+              <option value="javascript">JavaScript</option>
+              <option value="html">HTML</option>
+              <option value="css">CSS</option>
+              <option value="sql">SQL</option>
+            </select>
+            <span class="hint" style="margin:0;">Students see your code update as you type.</span>
+          </div>
+          <div id="monacoHost"></div>
+        </div>
+
+        <!-- NOTES MODE -->
+        <div class="mode-body hidden" id="mode-notes">
+          <div class="code-toolbar">
+            <span class="hint" style="margin:0;">Use <code># Heading</code> and <code>- bullet</code> — students see it live too.</span>
+          </div>
+          <textarea id="notesArea" placeholder="Start writing your notes here…"></textarea>
+        </div>
+
+        <!-- WHITEBOARD MODE -->
+        <div class="mode-body hidden" id="mode-whiteboard">
+          <div class="code-toolbar">
+            <div class="wb-tools">
+              <button class="btn-icon btn-ghost wb-tool on" data-tool="pen" title="Pen">✏️</button>
+              <button class="btn-icon btn-ghost wb-tool" data-tool="eraser" title="Eraser">🧽</button>
+              <input type="color" id="wbColor" value="#1a2840" title="Colour">
+              <input type="range" id="wbWidth" min="1" max="20" value="3" title="Brush size">
+              <button class="btn btn-ghost btn-sm" id="wbUndo">Undo</button>
+              <button class="btn btn-ghost btn-sm" id="wbRedo">Redo</button>
+              <button class="btn btn-danger btn-sm" id="wbClear">Clear Board</button>
+            </div>
+          </div>
+          <div class="wb-canvas-wrap">
+            <canvas id="wbCanvas" width="1600" height="900"></canvas>
+          </div>
+        </div>
+
+      </section>
+
+      <aside class="side-panel">
+
+        <div class="card panel-card">
+          <h3>Share This Class</h3>
+          <div id="qrHost" class="qr-host"></div>
+          <div class="session-code" id="sessionCodeDisplay">------</div>
+          <div class="share-row">
+            <input type="text" id="joinLinkInput" readonly>
+            <button class="btn btn-ghost btn-sm" id="copyLinkBtn">Copy</button>
+          </div>
+        </div>
+
+        <div class="card panel-card">
+          <h3>Connected Students <span id="studentCount" class="count-badge">0</span></h3>
+          <ul id="studentList" class="student-list"><li class="empty-note">No students yet.</li></ul>
+        </div>
+
+        <div class="card panel-card">
+          <h3>Notes &amp; PDF</h3>
+          <button class="btn btn-primary btn-block" id="generateNotesBtn">Generate Notes</button>
+          <div id="notesPreview" class="notes-preview hidden"></div>
+          <div class="notes-actions hidden" id="notesActions">
+            <button class="btn btn-gold btn-block" id="downloadPdfBtn">Download PDF</button>
+            <button class="btn btn-ghost btn-block" id="shareNotesBtn">Share</button>
+          </div>
+          <a class="attendance-link" id="attendanceLink" href="#" target="_blank">Export attendance (CSV)</a>
+        </div>
+
+      </aside>
+
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay hidden" id="endModal">
+  <div class="modal-card">
+    <h3>End this class?</h3>
+    <p class="muted">Every connected student will be disconnected immediately. This can't be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="endCancelBtn">Cancel</button>
+      <button class="btn btn-danger" id="endConfirmBtn">End Class</button>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+<script src="/js/teacher.js"></script>
+</body>
+</html>
