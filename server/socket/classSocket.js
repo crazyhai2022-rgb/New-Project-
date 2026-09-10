@@ -1,5 +1,6 @@
 const { nanoid } = require('nanoid');
 const sessionStore = require('../services/sessionStore');
+const persistence = require('../services/persistence');
 
 const VALID_MODES = ['code', 'notes', 'whiteboard'];
 const VALID_LANGUAGES = ['c', 'cpp', 'java', 'python', 'javascript', 'html', 'css', 'sql'];
@@ -153,6 +154,7 @@ function attachClassSocket(io) {
       session.ended = true;
       io.to(roomFor(session.code)).emit('session:ended');
       io.socketsLeave(roomFor(session.code));
+      persistence.recordClassEnd(session.dbClassId); // fire-and-forget — the class is already over for everyone regardless
       sessionStore.remove(session.code);
     }));
 
@@ -166,7 +168,7 @@ function attachClassSocket(io) {
       if (!name) return ack?.({ ok: false, error: 'Please enter your name.' });
 
       const id = nanoid(10);
-      session.students.set(id, { id, name, joinedAt: Date.now(), leftAt: null, socketId: socket.id });
+      session.students.set(id, { id, name, joinedAt: Date.now(), leftAt: null, socketId: socket.id, dbAttendanceId: null });
 
       socket.data.role = 'student';
       socket.data.sessionCode = session.code;
@@ -188,6 +190,13 @@ function attachClassSocket(io) {
       });
 
       broadcastStudentList(io, session);
+
+      // Best-effort — attendance still shows in the live roster and CSV
+      // export even if this write fails or persistence isn't configured.
+      persistence.recordStudentJoin(session.dbClassId, name).then((rowId) => {
+        const student = session.students.get(id);
+        if (student) student.dbAttendanceId = rowId;
+      });
     });
 
     socket.on('disconnect', () => {
@@ -196,7 +205,10 @@ function attachClassSocket(io) {
       if (!session) return;
 
       const student = session.students.get(socket.data.studentId);
-      if (student) student.leftAt = Date.now();
+      if (student) {
+        student.leftAt = Date.now();
+        persistence.recordStudentLeave(student.dbAttendanceId);
+      }
       broadcastStudentList(io, session);
     });
   });

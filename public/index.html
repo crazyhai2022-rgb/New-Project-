@@ -53,6 +53,7 @@
   </div>
 
   <p class="join-alt">Joining as a student? Ask your teacher for the class link or QR code.</p>
+  <p class="join-alt"><a href="/history.html">My Past Classes →</a></p>
 </div>
 
 <script>
@@ -64,6 +65,14 @@ document.getElementById('createForm').addEventListener('submit', async function 
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Creating…';
 
+  // A stable anonymous id for this browser, so "My Past Classes" can find
+  // classes created here without needing a real login.
+  let teacherKey = localStorage.getItem('lcb_teacherKey');
+  if (!teacherKey) {
+    teacherKey = 'tk_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem('lcb_teacherKey', teacherKey);
+  }
+
   try {
     const res = await fetch('/api/classes', {
       method: 'POST',
@@ -73,6 +82,7 @@ document.getElementById('createForm').addEventListener('submit', async function 
         subject: document.getElementById('subject').value,
         className: document.getElementById('className').value,
         topic: document.getElementById('topic').value,
+        teacherKey,
       }),
     });
     const data = await res.json();

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Past Classes — LiveClass Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  body{ padding:40px 20px; }
+  .wrap{ max-width:760px; margin:0 auto; }
+  .top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+  .top h1{ font-size:22px; }
+  .back{ font-size:13.5px; color:var(--navy); font-weight:600; }
+  .class-row{ padding:18px 20px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .class-row b{ display:block; font-size:15px; color:var(--ink); }
+  .class-row span{ font-size:12.5px; color:var(--muted); }
+  .class-links{ display:flex; gap:8px; flex-wrap:wrap; }
+  .empty-state{ text-align:center; padding:60px 24px; color:var(--muted); }
+  .off-notice{ background:var(--amber-bg); color:var(--amber); padding:14px 16px; border-radius:var(--r); font-size:13.5px; margin-bottom:20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>My Past Classes</h1>
+    <a href="/" class="back">← New Class</a>
+  </div>
+  <div id="content">Loading…</div>
+</div>
+
+<script>
+(async function () {
+  const content = document.getElementById('content');
+  const teacherKey = localStorage.getItem('lcb_teacherKey');
+
+  if (!teacherKey) {
+    content.innerHTML = '<div class="card empty-state">You haven\\'t started a class from this browser yet.</div>';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/history/' + encodeURIComponent(teacherKey));
+    const data = await res.json();
+
+    if (!data.enabled) {
+      content.innerHTML =
+        '<div class="off-notice">Class history isn\\'t connected yet — add Supabase credentials in .env to start saving past classes. New classes still work normally either way.</div>';
+      return;
+    }
+
+    if (!data.classes.length) {
+      content.innerHTML = '<div class="card empty-state">No classes yet — once you teach one, it will show up here.</div>';
+      return;
+    }
+
+    content.innerHTML = data.classes.map(function (c) {
+      const snap = (c.class_snapshots || []).slice(-1)[0];
+      const date = new Date(c.started_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      const links = [];
+      if (snap && snap.pdf_url) links.push('<a class="btn btn-ghost btn-sm" href="' + snap.pdf_url + '" target="_blank">Notes PDF</a>');
+      if (snap && snap.whiteboard_image_url) links.push('<a class="btn btn-ghost btn-sm" href="' + snap.whiteboard_image_url + '" target="_blank">Whiteboard</a>');
+
+      return '<div class="card class-row">' +
+        '<div><b>' + escapeHtml(c.subject) + '</b>' +
+        '<span>' + [c.class_name, c.topic].filter(Boolean).map(escapeHtml).join(' · ') + ' — ' + date +
+        (c.status === 'live' ? ' · <span style="color:var(--green)">still live</span>' : '') + '</span></div>' +
+        '<div class="class-links">' + (links.join('') || '<span class="muted">No notes generated</span>') + '</div>' +
+        '</div>';
+    }).join('');
+  } catch (err) {
+    content.innerHTML = '<div class="card empty-state">Could not load your history right now.</div>';
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+})();
+</script>
+</body>
+</html>

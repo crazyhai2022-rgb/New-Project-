@@ -119,34 +119,37 @@ function drawSection(doc, section, index) {
   }
 }
 
-/** Streams a finished PDF to `res` (an Express response). */
-function generateNotesPdf(notesData, res, filename) {
-  const doc = new PDFDocument({ size: 'A4', margin: 40, bufferPages: true });
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  doc.pipe(res);
+/** Builds the PDF and resolves with the finished buffer (used for both the
+    HTTP response and, when persistence is enabled, storage upload). */
+function buildNotesPdfBuffer(notesData) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: 'A4', margin: 40, bufferPages: true });
+    const chunks = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
 
-  drawHeader(doc, notesData);
-  drawMeta(doc, notesData);
+    drawHeader(doc, notesData);
+    drawMeta(doc, notesData);
 
-  if (notesData.sections.length === 0) {
-    doc.fontSize(11).fillColor(MUTED).text('No content was captured during this class.', 40, doc.y);
-  } else {
-    notesData.sections.forEach((s, i) => drawSection(doc, s, i + 1));
-  }
+    if (notesData.sections.length === 0) {
+      doc.fontSize(11).fillColor(MUTED).text('No content was captured during this class.', 40, doc.y);
+    } else {
+      notesData.sections.forEach((s, i) => drawSection(doc, s, i + 1));
+    }
 
-  // Footer page numbers.
-  const range = doc.bufferedPageRange();
-  for (let i = range.start; i < range.start + range.count; i++) {
-    doc.switchToPage(i);
-    doc.fontSize(8).fillColor(MUTED)
-      .text(`LiveClass Board — Page ${i + 1} of ${range.count}`, 40, doc.page.height - 40, {
-        width: doc.page.width - 80,
-        align: 'center',
-      });
-  }
+    const range = doc.bufferedPageRange();
+    for (let i = range.start; i < range.start + range.count; i++) {
+      doc.switchToPage(i);
+      doc.fontSize(8).fillColor(MUTED)
+        .text(`LiveClass Board — Page ${i + 1} of ${range.count}`, 40, doc.page.height - 40, {
+          width: doc.page.width - 80,
+          align: 'center',
+        });
+    }
 
-  doc.end();
+    doc.end();
+  });
 }
 
-module.exports = { generateNotesPdf };
+module.exports = { buildNotesPdfBuffer };

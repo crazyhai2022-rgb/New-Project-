@@ -165,7 +165,54 @@ Any host that runs `npm install && npm start` and exposes one port works
 identically — none of the code is Hostinger-specific. This is the simplest
 path if your Hostinger plan turns out not to support Node.js apps.
 
-## Testing this yourself
+## Class history (Supabase)
+
+The live classroom never needed a database, and still doesn't — this part is
+purely optional. If you connect Supabase, every class gets a permanent
+record: subject, attendance, generated notes, and a downloadable copy of
+each PDF and whiteboard snapshot, visible on the **My Past Classes** page.
+
+A Supabase project has already been created for this app:
+- Project: `liveclass-board` (ref `fbhqslcnjcvqqopkrvls`, Mumbai region)
+- Tables `classes`, `class_snapshots`, `attendance` are already migrated
+- Storage buckets `whiteboard-snapshots` and `notes-pdfs` are already created
+- Both are **private** — Row Level Security is on with zero policies, so the
+  public/anon key can't read or write any of this. Only the server, using
+  the service-role secret key, can.
+
+**To activate it**, add two lines to `.env`:
+
+```
+SUPABASE_URL=https://fbhqslcnjcvqqopkrvls.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=paste-it-here
+```
+
+Get the service-role key from **Supabase Dashboard → Project Settings →
+API → service_role secret**. I can't fetch or generate this key for you —
+Supabase deliberately keeps it out of reach of any tool, the same way a
+bank won't email you your card PIN. Copy it yourself, once, into `.env` (or
+your hosting provider's environment-variable screen) and never commit it to
+git — `.gitignore` already excludes `.env`.
+
+Until those two variables are set, the app runs exactly as if Supabase
+didn't exist: classes work, PDFs generate, nothing errors — you just won't
+see anything on **My Past Classes**. The server logs one clear line on
+startup telling you which state it's in.
+
+### How the anonymous "teacher key" works
+
+There's no login system yet, so "my past classes" is scoped by a random id
+generated in the browser's `localStorage` the first time someone starts a
+class (`lcb_teacherKey`). It's enough to keep one teacher's history separate
+from another's on the same server, but it is **not real authentication** —
+anyone with that exact string could see that teacher's history, and clearing
+browser storage loses access to it. This is an honest MVP tradeoff, not a
+security feature. The upgrade path is straightforward: add Supabase Auth,
+add a `teacher_id uuid references auth.users` column alongside the existing
+`teacher_key` text column, and switch the history query over once real
+accounts exist.
+
+
 
 1. Open the site, create a class.
 2. Open the join link in an incognito window (simulating a student's own

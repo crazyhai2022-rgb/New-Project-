@@ -18,6 +18,8 @@ function makeSession({ code, teacherName, subject, className, topic }) {
     className,
     topic,
     teacherSocketId: null,
+    teacherKey: null,      // anonymous per-browser id, used to look up this class in history later
+    dbClassId: null,       // Postgres row id, if persistence is configured
     createdAt: Date.now(),
     locked: false,
     paused: false,
