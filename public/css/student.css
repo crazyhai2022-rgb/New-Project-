@@ -5,8 +5,7 @@ body{ background:var(--page); }
 .join-card h1{ font-size:21px; margin-bottom:6px; }
 .join-card .field{ text-align:left; }
 .brand-mark{
-  width:52px; height:52px; border-radius:16px; background:var(--navy); color:var(--gold);
-  display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; font-family:'Poppins',sans-serif;
+  width:52px; height:52px; object-fit:contain; display:block;
 }
 
 .hidden{ display:none !important; }

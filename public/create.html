@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/assets/img/logo.png">
 <title>Create Class — LiveClass Board</title>
 <script>
 (function(){try{var t=localStorage.getItem('lcb_theme');
@@ -19,8 +20,8 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
   .landing{ width:100%; max-width:440px; }
   .brand{ text-align:center; margin-bottom:28px; }
   .brand-mark{
-    width:56px; height:56px; margin:0 auto 14px; border-radius:16px; background:var(--navy);
-    display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:26px; font-weight:700;
+    width:56px; height:56px; margin:0 auto 14px; object-fit:contain;
+    display:block;
   }
   .brand h1{ font-size:24px; margin-bottom:4px; }
   .brand p{ font-size:13.5px; color:var(--muted); }
@@ -40,7 +41,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 <div class="hero-wrap">
   <div class="landing">
     <div class="brand">
-      <div class="brand-mark">LC</div>
+      <img src="/assets/img/logo.png" class="brand-mark" alt="LiveClass Board">
       <h1>Create a Live Class</h1>
       <p>Fill in the details — students join with the code you get next.</p>
     </div>
