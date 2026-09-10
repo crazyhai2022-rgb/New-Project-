@@ -4,98 +4,81 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LiveClass Board — Teacher Writes Once. Every Student Sees It Live.</title>
+<script>
+(function(){try{var t=localStorage.getItem('lcb_theme');
+if(!t)t='light';
+document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 <style>
-  body{ display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
-  .landing{ width:100%; max-width:440px; }
-  .brand{ text-align:center; margin-bottom:28px; }
+  body{ display:flex; flex-direction:column; min-height:100vh; }
+  .hero-wrap{ flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .choice{ width:100%; max-width:520px; }
+  .top-bar{ display:flex; justify-content:flex-end; padding:16px 20px; }
+  .brand{ text-align:center; margin-bottom:34px; }
   .brand-mark{
-    width:56px; height:56px; margin:0 auto 14px; border-radius:16px; background:var(--navy);
-    display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:26px; font-weight:700;
+    width:60px; height:60px; margin:0 auto 16px; border-radius:18px; background:var(--navy);
+    display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:28px; font-weight:700;
   }
-  .brand h1{ font-size:24px; margin-bottom:4px; }
-  .brand p{ font-size:13.5px; color:var(--muted); }
-  .landing .card{ padding:28px; }
-  .join-alt{ text-align:center; margin-top:18px; font-size:13.5px; color:var(--muted); }
-  .join-alt a{ color:var(--navy); font-weight:700; }
+  .brand h1{ font-size:27px; margin-bottom:6px; }
+  .brand p{ font-size:14px; color:var(--muted); }
+  .choice-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .choice-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+    box-shadow:var(--shadow); padding:30px 22px; text-align:center; cursor:pointer;
+    transition:transform .15s, border-color .15s; display:block;
+  }
+  .choice-card:hover{ transform:translateY(-3px); border-color:var(--navy-3); }
+  .choice-icon{
+    width:52px; height:52px; margin:0 auto 14px; border-radius:14px; display:flex; align-items:center;
+    justify-content:center; font-size:24px;
+  }
+  .choice-card.teach .choice-icon{ background:rgba(242,181,48,.18); }
+  .choice-card.join .choice-icon{ background:rgba(47,69,105,.14); }
+  .choice-card h2{ font-size:17px; margin-bottom:6px; }
+  .choice-card p{ font-size:12.5px; color:var(--muted); line-height:1.5; }
+  .history-link{ text-align:center; margin-top:22px; font-size:13px; color:var(--muted); }
+  .history-link a{ color:var(--navy); font-weight:600; }
+  @media (max-width:480px){ .choice-grid{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
-<div class="landing">
-  <div class="brand">
-    <div class="brand-mark">LC</div>
-    <h1>LiveClass Board</h1>
-    <p>Teacher writes once. Every student sees it live.</p>
-  </div>
 
-  <div class="card">
-    <div id="formError"></div>
-    <form id="createForm">
-      <div class="field">
-        <label for="teacherName">Your Name</label>
-        <input type="text" id="teacherName" required placeholder="e.g. Mrs. Sharma" maxlength="80">
-      </div>
-      <div class="field">
-        <label for="subject">Subject</label>
-        <input type="text" id="subject" required placeholder="e.g. C Programming" maxlength="80">
-      </div>
-      <div class="field">
-        <label for="className">Class</label>
-        <input type="text" id="className" placeholder="e.g. BCA 1st Year" maxlength="80">
-      </div>
-      <div class="field">
-        <label for="topic">Topic <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
-        <input type="text" id="topic" placeholder="e.g. Functions in C" maxlength="120">
-      </div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg" id="createBtn">Start Live Class</button>
-    </form>
-  </div>
-
-  <p class="join-alt">Joining as a student? Ask your teacher for the class link or QR code.</p>
-  <p class="join-alt"><a href="/history.html">My Past Classes →</a></p>
+<div class="top-bar">
+  <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
 </div>
 
-<script>
-document.getElementById('createForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const btn = document.getElementById('createBtn');
-  const errBox = document.getElementById('formError');
-  errBox.innerHTML = '';
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Creating…';
+<div class="hero-wrap">
+  <div class="choice">
+    <div class="brand">
+      <div class="brand-mark">LC</div>
+      <h1>LiveClass Board</h1>
+      <p>Teacher writes once. Every student sees it live.</p>
+    </div>
 
-  // A stable anonymous id for this browser, so "My Past Classes" can find
-  // classes created here without needing a real login.
-  let teacherKey = localStorage.getItem('lcb_teacherKey');
-  if (!teacherKey) {
-    teacherKey = 'tk_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    localStorage.setItem('lcb_teacherKey', teacherKey);
-  }
+    <div class="choice-grid">
+      <a href="/create.html" class="choice-card teach">
+        <div class="choice-icon">🧑‍🏫</div>
+        <h2>Create Class</h2>
+        <p>Start a live class as a teacher — get a code, QR and link to share.</p>
+      </a>
+      <a href="/join.html" class="choice-card join">
+        <div class="choice-icon">🎓</div>
+        <h2>Join Class</h2>
+        <p>Enter a class code (or scan a QR) to watch your teacher's board live.</p>
+      </a>
+    </div>
 
-  try {
-    const res = await fetch('/api/classes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        teacherName: document.getElementById('teacherName').value,
-        subject: document.getElementById('subject').value,
-        className: document.getElementById('className').value,
-        topic: document.getElementById('topic').value,
-        teacherKey,
-      }),
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'Could not create the class.');
+    <p class="history-link"><a href="/history.html">My Past Classes →</a></p>
+  </div>
+</div>
 
-    sessionStorage.setItem('lcb_teacherName', document.getElementById('teacherName').value);
-    window.location.href = '/teach/' + data.code;
-  } catch (err) {
-    errBox.innerHTML = '<div class="alert alert-error">' + err.message + '</div>';
-    btn.disabled = false;
-    btn.textContent = 'Start Live Class';
-  }
-});
-</script>
+<footer class="page-footer">Powered by <b>Vicky Raj</b></footer>
+
+<script src="/js/theme.js"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 body{ background:var(--page); }
 
-.join-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+.join-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; position:relative; }
 .join-card{ width:100%; max-width:380px; padding:30px 26px; text-align:center; }
 .join-card h1{ font-size:21px; margin-bottom:6px; }
 .join-card .field{ text-align:left; }
@@ -11,23 +11,23 @@ body{ background:var(--page); }
 
 .hidden{ display:none !important; }
 
-.viewer{ min-height:100vh; display:flex; flex-direction:column; background:#eef1f6; }
+.viewer{ min-height:100vh; display:flex; flex-direction:column; background:var(--page); }
 
 .viewer-top{
   display:flex; align-items:center; justify-content:space-between; gap:12px;
-  padding:12px 16px; background:#fff; border-bottom:1px solid var(--line); flex-wrap:wrap;
+  padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--line); flex-wrap:wrap;
 }
 .viewer-subject b{ display:block; font-size:15px; color:var(--ink); }
 .viewer-subject span{ font-size:12px; }
 .viewer-status{ display:flex; align-items:center; gap:10px; font-size:12.5px; }
 
-.viewer-tabs{ padding:8px 16px; background:#fff; border-bottom:1px solid var(--line); }
+.viewer-tabs{ padding:8px 16px; background:var(--surface); border-bottom:1px solid var(--line); }
 .viewer-tab-label{ font-size:13px; font-weight:700; color:var(--navy); }
 
 .viewer-stage{ flex:1; overflow:auto; padding:16px; display:flex; }
 .stage-zoomable{
   margin:auto; transform-origin:top center; transition:transform .12s ease-out;
-  background:#fff; border-radius:10px; box-shadow:var(--shadow); min-width:320px;
+  background:var(--surface); border-radius:10px; box-shadow:var(--shadow); min-width:320px;
 }
 
 .code-view{
@@ -50,7 +50,7 @@ body{ background:var(--page); }
 
 .zoom-controls{
   position:sticky; bottom:0; display:flex; align-items:center; justify-content:center; gap:10px;
-  padding:12px 16px; background:#fff; border-top:1px solid var(--line);
+  padding:12px 16px; background:var(--surface); border-top:1px solid var(--line);
 }
 .zoom-controls #zoomLevel{ font-size:13px; font-weight:700; color:var(--ink); min-width:44px; text-align:center; }
 

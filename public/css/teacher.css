@@ -21,7 +21,7 @@
 
 .topbar{
   display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
-  padding:16px 26px; background:#fff; border-bottom:1px solid var(--line);
+  padding:16px 26px; background:var(--surface); border-bottom:1px solid var(--line);
 }
 .topbar-info h1{ font-size:19px; margin-bottom:2px; }
 .muted{ color:var(--muted); font-size:13px; }
@@ -29,13 +29,13 @@
 
 .layout{ flex:1; display:grid; grid-template-columns:1fr 320px; gap:20px; padding:20px 26px 40px; align-items:start; }
 
-.board-panel{ background:#fff; border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); overflow:hidden; }
+.board-panel{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); overflow:hidden; }
 .mode-tabs{ display:flex; border-bottom:1px solid var(--line); background:var(--page); }
 .mode-tab{
   padding:13px 20px; border:none; background:none; font-size:14px; font-weight:600; color:var(--muted);
   cursor:pointer; border-bottom:2px solid transparent;
 }
-.mode-tab.on{ color:var(--navy); border-bottom-color:var(--gold); background:#fff; }
+.mode-tab.on{ color:var(--navy); border-bottom-color:var(--gold); background:var(--surface); }
 .mode-tab:hover:not(.on){ color:var(--ink); }
 
 .mode-body{ padding:0; }
@@ -57,8 +57,8 @@
 .wb-tools input[type=range]{ width:100px; }
 .wb-tool{ font-size:16px; }
 .wb-tool.on{ background:var(--navy); color:#fff; border-color:var(--navy); }
-.wb-canvas-wrap{ background:#fdfdfd; overflow:auto; display:flex; justify-content:center; padding:16px; }
-#wbCanvas{ background:#fff; border:1px solid var(--line); border-radius:8px; cursor:crosshair; touch-action:none; max-width:100%; }
+.wb-canvas-wrap{ background:var(--page); overflow:auto; display:flex; justify-content:center; padding:16px; }
+#wbCanvas{ background:var(--surface); border:1px solid var(--line); border-radius:8px; cursor:crosshair; touch-action:none; max-width:100%; }
 
 .side-panel{ display:flex; flex-direction:column; gap:16px; position:sticky; top:20px; }
 .panel-card{ padding:18px; }
@@ -97,7 +97,7 @@
   background:rgba(20,20,30,.55); padding:20px;
 }
 .modal-overlay.hidden{ display:none; }
-.modal-card{ width:100%; max-width:380px; background:#fff; border-radius:var(--r-lg); padding:26px; box-shadow:var(--shadow); }
+.modal-card{ width:100%; max-width:380px; background:var(--surface); border-radius:var(--r-lg); padding:26px; box-shadow:var(--shadow); }
 .modal-card h3{ font-size:18px; margin-bottom:8px; }
 .modal-actions{ display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
 
