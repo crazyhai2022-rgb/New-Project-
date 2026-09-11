@@ -26,6 +26,33 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
     <nav>
       <a class="on"><i>▤</i>Live Class</a>
     </nav>
+
+    <div class="side-tools">
+      <label class="side-label" for="langSelect">Language</label>
+      <select id="langSelect">
+        <option value="c">C</option>
+        <option value="cpp">C++</option>
+        <option value="java">Java</option>
+        <option value="python">Python</option>
+        <option value="javascript">JavaScript</option>
+        <option value="html">HTML</option>
+        <option value="css">CSS</option>
+        <option value="sql">SQL</option>
+      </select>
+
+      <button type="button" class="btn btn-ghost btn-sm btn-block" id="insertStarterBtn" style="margin-top:10px;">＋ Insert Starter Code</button>
+
+      <label class="side-switch">
+        <input type="checkbox" id="keystrokesToggle">
+        <span>Show my keypresses to students</span>
+      </label>
+
+      <label class="side-switch">
+        <input type="checkbox" id="previewToggle">
+        <span>Live Preview (HTML/CSS/JS)</span>
+      </label>
+    </div>
+
     <div class="side-status">
       <span id="connStatus" class="pill pill-off"><span class="dot"></span>Connecting…</span>
       <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode" style="margin-top:10px;">
@@ -62,19 +89,17 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
         <!-- CODE MODE -->
         <div class="mode-body" id="mode-code">
           <div class="code-toolbar">
-            <select id="langSelect">
-              <option value="c">C</option>
-              <option value="cpp">C++</option>
-              <option value="java">Java</option>
-              <option value="python">Python</option>
-              <option value="javascript">JavaScript</option>
-              <option value="html">HTML</option>
-              <option value="css">CSS</option>
-              <option value="sql">SQL</option>
-            </select>
-            <span class="hint" style="margin:0;">Students see your code update as you type.</span>
+            <span class="hint" style="margin:0;">Students see your code update as you type. Choose the language and Live Preview from the sidebar.</span>
+            <button class="btn btn-ghost btn-sm" id="collapsePanelBtn" title="Collapse the side panel" style="margin-left:auto;">⇔ More space</button>
           </div>
           <div id="monacoHost"></div>
+          <div class="preview-panel hidden" id="previewPanel">
+            <div class="preview-panel-head">
+              <span>Live Preview</span>
+              <button type="button" class="btn-icon btn-ghost" id="previewCloseBtn" title="Close preview">✕</button>
+            </div>
+            <iframe id="previewFrame" title="Live preview" sandbox="allow-scripts"></iframe>
+          </div>
         </div>
 
         <!-- NOTES MODE -->
@@ -105,7 +130,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 
       </section>
 
-      <aside class="side-panel">
+      <aside class="side-panel" id="sidePanel">
 
         <div class="card panel-card">
           <h3>Share This Class</h3>
@@ -137,6 +162,8 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 
     </div>
   </main>
+
+  <button type="button" class="panel-expand-tab hidden" id="expandPanelBtn" title="Show side panel">‹</button>
 </div>
 
 <footer class="page-footer">Powered by <b>Vicky Raj</b></footer>

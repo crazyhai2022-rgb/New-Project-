@@ -53,6 +53,7 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
     <div class="viewer-status">
       <span id="vConn" class="pill pill-live"><span class="dot"></span>LIVE</span>
       <span id="vCount" class="muted">0 students</span>
+      <button type="button" class="btn-icon btn-ghost" id="fullscreenBtn" title="Fullscreen" style="width:32px;height:32px;">⛶</button>
       <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode" style="width:32px;height:32px;">
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -75,6 +76,14 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 
     </div>
   </div>
+
+  <div class="preview-panel-student hidden" id="studentPreviewPanel">
+    <div class="preview-panel-head"><span>Live Preview</span></div>
+    <iframe id="studentPreviewFrame" title="Live preview" sandbox="allow-scripts"></iframe>
+  </div>
+
+  <button type="button" class="hand-raise-btn" id="handRaiseBtn" title="Raise hand">✋</button>
+  <div class="key-overlay" id="keyOverlay"></div>
 
   <div class="viewer-banner hidden" id="pausedBanner">⏸ The teacher has paused the class.</div>
 

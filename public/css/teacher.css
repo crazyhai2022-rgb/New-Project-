@@ -109,3 +109,57 @@
   .side{ transform:translateX(-100%); }
   .main{ margin-left:0; }
 }
+
+/* ------------------------------ sidebar tools ------------------------------ */
+.side-tools{ padding:14px 6px; border-top:1px solid rgba(255,255,255,.12); border-bottom:1px solid rgba(255,255,255,.12); margin:6px 0; }
+.side-label{ display:block; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:6px; padding:0 6px; }
+.side-tools select{
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); color:#fff;
+  padding:9px 30px 9px 12px;
+}
+.side-tools select option{ color:#1b2334; }
+.side-switch{
+  display:flex; align-items:center; gap:9px; margin-top:14px; padding:0 6px;
+  font-size:12.5px; color:rgba(255,255,255,.75); cursor:pointer; line-height:1.4;
+}
+.side-switch input{ width:auto; accent-color:var(--gold); flex-shrink:0; margin-top:1px; }
+
+/* ------------------------------ collapsible panel --------------------------- */
+.layout.panel-collapsed{ grid-template-columns:1fr !important; }
+.layout.panel-collapsed .side-panel{ display:none; }
+.panel-expand-tab{
+  position:fixed; top:50%; right:0; transform:translateY(-50%); z-index:40;
+  width:26px; height:56px; border-radius:8px 0 0 8px; border:1px solid var(--line-2); border-right:none;
+  background:var(--surface); color:var(--body); cursor:pointer; box-shadow:var(--shadow); font-size:16px;
+}
+.panel-expand-tab.hidden{ display:none; }
+
+/* -------------------------------- live preview ------------------------------ */
+.preview-panel{ border-top:1px solid var(--line); display:flex; flex-direction:column; height:260px; }
+.preview-panel.hidden{ display:none; }
+.preview-panel-head{
+  display:flex; align-items:center; justify-content:space-between; padding:8px 14px;
+  background:var(--page); font-size:12.5px; font-weight:700; color:var(--body);
+}
+#previewFrame{ flex:1; width:100%; border:none; background:#fff; }
+
+/* --------------------------------- key overlay ------------------------------- */
+.key-overlay{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:900;
+  display:flex; gap:8px; pointer-events:none;
+}
+.key-chip{
+  padding:9px 16px; border-radius:10px; background:rgba(26,40,64,.92); color:#fff;
+  font-family:'Courier New',monospace; font-size:14px; font-weight:700; box-shadow:0 6px 18px rgba(0,0,0,.3);
+  animation:keyChipIn .18s ease-out, keyChipOut .3s ease-in 1s forwards;
+}
+@keyframes keyChipIn{ from{ opacity:0; transform:translateY(8px) scale(.9); } to{ opacity:1; transform:none; } }
+@keyframes keyChipOut{ to{ opacity:0; transform:translateY(-8px); } }
+
+/* --------------------------------- hand raised ------------------------------- */
+.hand-badge{
+  display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px;
+  border-radius:50%; background:var(--amber-bg); margin-left:auto; font-size:12px;
+  animation:handPulse 1s ease-in-out infinite;
+}
+@keyframes handPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.15); } }

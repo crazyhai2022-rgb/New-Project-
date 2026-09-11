@@ -74,8 +74,32 @@ Adding persistence later means changing `server/services/sessionStore.js`
 to read/write a real store instead of a `Map` — nothing else needs to know
 the difference.
 
-## A few practical decisions worth knowing about
+## Teacher editor extras
 
+- **Language picker lives in the sidebar now**, under "Live Class" — not in
+  the code toolbar — so it's available no matter which tab (Code/Notes/
+  Whiteboard) is open, and the code editor gets the toolbar space back.
+- **Collapsible side panel** — the "⇔ More space" button (and the small tab
+  that appears on the right edge) hides the Share/Students/Notes column so
+  the editor can use the full width on a small screen or a projector.
+- **Insert Starter Code** drops in a working boilerplate for whichever
+  language is selected (all 8 languages). Typing `#` into an empty C/C++
+  file, or `!` into an empty HTML file, does the same thing automatically —
+  a small, purpose-built stand-in for Emmet-style abbreviations, not the
+  full Emmet engine.
+- **Live Preview** renders the current HTML/CSS/JS in a sandboxed iframe,
+  live, on both the teacher's screen and every student's screen at once.
+- **"Show my keypresses"** is an opt-in toggle — when it's on, every key the
+  teacher presses shows as a brief on-screen chip on every student's device,
+  similar to a screencast-mode overlay. Off by default; the teacher decides
+  when to turn it on.
+- **Raise hand** — a floating button on the student's screen sends a private
+  ping straight to the teacher's roster (never to other students).
+- **Monaco now switches with the site's dark/light toggle** instead of being
+  stuck on a light theme; the plain-textarea fallback (used if the Monaco
+  CDN is blocked or slow) is also properly dark/light themed.
+
+## A few practical decisions worth knowing about
 - **Code sync sends the full text, debounced to ~220ms**, not a
   character-by-character operational-transform diff. For a classroom-sized
   amount of code this is simpler, has zero merge-conflict risk (only the

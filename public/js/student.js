@@ -74,6 +74,7 @@
     applyNotes(session.board.notes.content);
     replaceWhiteboard(session.board.whiteboard.strokes);
     if (session.paused) showPaused(true);
+    if (session.previewEnabled) applyPreview(true);
 
     wireSocketEvents();
     fitToScreen();
@@ -93,6 +94,7 @@
             replaceWhiteboard(res.session.board.whiteboard.strokes);
             setMode(res.session.mode);
             showPaused(!!res.session.paused);
+            applyPreview(!!res.session.previewEnabled);
           }
         });
       }
@@ -108,6 +110,9 @@
     socket.on('students:update', ({ count }) => {
       el('vCount').textContent = count + (count === 1 ? ' student' : ' students');
     });
+
+    socket.on('board:previewToggled', ({ enabled }) => applyPreview(enabled));
+    socket.on('board:keystroke', ({ label }) => showKeyChip(label));
 
     socket.on('session:paused', () => showPaused(true));
     socket.on('session:resumed', () => showPaused(false));
@@ -140,7 +145,10 @@
     el('wbView').classList.toggle('hidden', mode !== 'whiteboard');
   }
 
+  let lastCodeState = { language: 'plaintext', content: '' };
+
   function applyCode(codeState) {
+    lastCodeState = codeState || lastCodeState;
     const codeEl = el('codeViewInner');
     codeEl.textContent = codeState.content || '';
     codeEl.className = 'language-' + (codeState.language || 'plaintext');
@@ -148,6 +156,7 @@
       codeEl.removeAttribute('data-highlighted');
       hljs.highlightElement(codeEl);
     }
+    updateStudentPreview();
   }
 
   function applyNotes(text) {
@@ -230,4 +239,80 @@
   }
   el('zoomFit').addEventListener('click', fitToScreen);
   window.addEventListener('resize', () => { /* user-controlled from here — no auto re-fit to avoid surprising jumps */ });
+
+  // ------------------------------ fullscreen ------------------------------
+  const fsBtn = el('fullscreenBtn');
+  if (fsBtn) {
+    fsBtn.addEventListener('click', function () {
+      if (!document.fullscreenElement) {
+        (el('viewer').requestFullscreen || function () {}).call(el('viewer'));
+      } else {
+        document.exitFullscreen();
+      }
+    });
+    document.addEventListener('fullscreenchange', function () {
+      fsBtn.textContent = document.fullscreenElement ? '⤢' : '⛶';
+      fsBtn.title = document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen';
+    });
+  }
+
+  // ------------------------------ hand raise ------------------------------
+  const handBtn = el('handRaiseBtn');
+  let handRaised = false;
+  if (handBtn) {
+    handBtn.addEventListener('click', function () {
+      handRaised = !handRaised;
+      handBtn.classList.toggle('raised', handRaised);
+      if (socket) socket.emit('student:raiseHand', { raised: handRaised });
+    });
+  }
+
+  // ------------------------------ keystroke overlay ------------------------------
+  function showKeyChip(label) {
+    const overlay = el('keyOverlay');
+    if (!overlay || !label) return;
+    const chip = document.createElement('span');
+    chip.className = 'key-chip';
+    chip.textContent = label;
+    overlay.appendChild(chip);
+    setTimeout(() => chip.remove(), 1400);
+  }
+
+  // ------------------------------ live preview (received) ------------------------------
+  function buildPreviewHtml(lang, content) {
+    if (lang === 'html') {
+      return /<html[\s>]/i.test(content) ? content : `<!DOCTYPE html><html><body>${content}</body></html>`;
+    }
+    if (lang === 'css') {
+      return `<!DOCTYPE html><html><head><style>${content}</style></head>
+        <body><h1>Heading</h1><p>Paragraph text to preview your CSS against.</p>
+        <button>Button</button></body></html>`;
+    }
+    if (lang === 'javascript') {
+      return `<!DOCTYPE html><html><body style="font-family:sans-serif;padding:14px;">
+        <div id="out" style="white-space:pre-wrap;font-family:monospace;font-size:13px;"></div>
+        <script>
+          const out = document.getElementById('out');
+          console.log = (...a) => { out.textContent += a.join(' ') + '\\n'; };
+        <\/script>
+        <script>${content}<\/script>
+        </body></html>`;
+    }
+    return `<!DOCTYPE html><html><body style="font-family:sans-serif;padding:20px;color:#888;">
+      Live Preview works for HTML, CSS and JavaScript.</body></html>`;
+  }
+
+  let previewOn = false;
+  function updateStudentPreview() {
+    if (!previewOn) return;
+    const frame = el('studentPreviewFrame');
+    if (frame) frame.srcdoc = buildPreviewHtml(lastCodeState.language, lastCodeState.content);
+  }
+
+  function applyPreview(enabled) {
+    previewOn = !!enabled;
+    const panel = el('studentPreviewPanel');
+    if (panel) panel.classList.toggle('hidden', !previewOn);
+    if (previewOn) updateStudentPreview();
+  }
 })();

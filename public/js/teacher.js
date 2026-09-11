@@ -116,11 +116,15 @@
     useFallbackEditor();
   }
 
+  function currentMonacoTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'vs-dark' : 'vs';
+  }
+
   function initMonaco() {
     monacoEditor = monaco.editor.create(el('monacoHost'), {
       value: pendingCodeApply || '',
       language: monacoLangFor(el('langSelect').value),
-      theme: 'vs',
+      theme: currentMonacoTheme(),
       fontSize: 14,
       minimap: { enabled: false },
       automaticLayout: true,
@@ -129,14 +133,25 @@
     monacoReady = true;
     pendingCodeApply = null;
 
+    // Keep Monaco's own theme in sync with the site-wide dark/light toggle —
+    // otherwise the editor is stuck on a light background no matter what.
+    window.addEventListener('lcb:theme-changed', function () {
+      monaco.editor.setTheme(currentMonacoTheme());
+    });
+
     let debounce = null;
     monacoEditor.onDidChangeModelContent(function () {
+      const val = monacoEditor.getValue();
+      const snippet = maybeAutoSnippet(val);
+      if (snippet) { applySnippet(snippet); return; }
+
       clearTimeout(debounce);
       debounce = setTimeout(function () {
         socket.emit('teacher:updateCode', {
           language: el('langSelect').value,
           content: monacoEditor.getValue(),
         });
+        updatePreview();
       }, 220); // debounced — see README for why full-content sync was chosen over OT for the MVP
     });
   }
@@ -148,16 +163,20 @@
     host.innerHTML = '';
     const ta = document.createElement('textarea');
     ta.id = 'fallbackCodeArea';
-    ta.style.cssText = 'width:100%;height:100%;border:none;padding:16px 20px;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.6;resize:none;';
+    ta.style.cssText = 'width:100%;height:100%;border:none;padding:16px 20px;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.6;resize:none;background:var(--surface);color:var(--ink);';
     ta.value = pendingCodeApply || '';
     ta.placeholder = 'Type your code here…';
     host.appendChild(ta);
 
     let debounce = null;
     ta.addEventListener('input', function () {
+      const snippet = maybeAutoSnippet(ta.value);
+      if (snippet) { applySnippet(snippet); return; }
+
       clearTimeout(debounce);
       debounce = setTimeout(function () {
         socket.emit('teacher:updateCode', { language: el('langSelect').value, content: ta.value });
+        updatePreview();
       }, 220);
     });
 
@@ -179,6 +198,7 @@
   el('langSelect').addEventListener('change', function () {
     if (monacoReady && !usingFallbackEditor) monaco.editor.setModelLanguage(monacoEditor.getModel(), monacoLangFor(this.value));
     socket.emit('teacher:updateCode', { language: this.value, content: monacoReady ? monacoEditor.getValue() : '' });
+    updatePreview();
   });
 
   function monacoLangFor(v) {
@@ -329,6 +349,8 @@
 
   // ---------------------------------------------------------------- roster
 
+  const raisedHands = new Set();
+
   function renderStudents({ count, list }) {
     el('studentCount').textContent = count;
     const ul = el('studentList');
@@ -338,11 +360,23 @@
     }
     ul.innerHTML = list.map((s) => {
       const initial = (s.name || '?').trim().charAt(0).toUpperCase();
-      return `<li><span class="avatar">${initial}</span>${escapeHtml(s.name)}</li>`;
+      const hand = raisedHands.has(s.id) ? '<span class="hand-badge" title="Hand raised">✋</span>' : '';
+      return `<li data-id="${escapeHtml(s.id)}"><span class="avatar">${initial}</span>${escapeHtml(s.name)}${hand}</li>`;
     }).join('');
   }
 
   socket.on('students:update', renderStudents);
+
+  socket.on('student:handRaised', function ({ studentId, raised }) {
+    if (raised) raisedHands.add(studentId);
+    else raisedHands.delete(studentId);
+
+    const li = el('studentList').querySelector(`li[data-id="${studentId}"]`);
+    if (!li) return; // roster hasn't rendered this student yet — the next students:update will pick up raisedHands anyway
+    const existing = li.querySelector('.hand-badge');
+    if (raised && !existing) li.insertAdjacentHTML('beforeend', '<span class="hand-badge" title="Hand raised">✋</span>');
+    if (!raised && existing) existing.remove();
+  });
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -410,5 +444,143 @@
       this.textContent = 'Link copied!';
       setTimeout(() => (this.textContent = 'Share'), 1400);
     }
+  });
+
+  // ------------------------------ collapsible side panel ------------------------------
+  (function () {
+    const layout = document.querySelector('.layout');
+    const collapseBtn = el('collapsePanelBtn');
+    const expandTab = el('expandPanelBtn');
+    if (!layout || !collapseBtn || !expandTab) return;
+
+    function setCollapsed(collapsed) {
+      layout.classList.toggle('panel-collapsed', collapsed);
+      expandTab.classList.toggle('hidden', !collapsed);
+      if (monacoReady && monacoEditor.layout) setTimeout(() => monacoEditor.layout(), 60);
+    }
+    collapseBtn.addEventListener('click', () => setCollapsed(true));
+    expandTab.addEventListener('click', () => setCollapsed(false));
+  })();
+
+  // ------------------------------ starter code / snippets ------------------------------
+  const CURSOR_MARK = '\u2038CURSOR\u2038';
+  const STARTERS = {
+    c: `#include <stdio.h>\n\nint main() {\n    ${CURSOR_MARK}\n    return 0;\n}\n`,
+    cpp: `#include <iostream>\nusing namespace std;\n\nint main() {\n    ${CURSOR_MARK}\n    return 0;\n}\n`,
+    java: `public class Main {\n    public static void main(String[] args) {\n        ${CURSOR_MARK}\n    }\n}\n`,
+    python: `def main():\n    ${CURSOR_MARK}\n\nif __name__ == "__main__":\n    main()\n`,
+    javascript: `function main() {\n    ${CURSOR_MARK}\n}\n\nmain();\n`,
+    html: `<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>Document</title>\n</head>\n<body>\n    ${CURSOR_MARK}\n</body>\n</html>\n`,
+    css: `body {\n    margin: 0;\n    font-family: sans-serif;\n    ${CURSOR_MARK}\n}\n`,
+    sql: `SELECT ${CURSOR_MARK}\nFROM table_name\nWHERE condition;\n`,
+  };
+
+  function currentEditorValue() {
+    return monacoReady ? monacoEditor.getValue() : '';
+  }
+
+  function applySnippet(text) {
+    const cursorIndex = text.indexOf(CURSOR_MARK);
+    const clean = text.replace(CURSOR_MARK, '');
+
+    if (monacoReady && !usingFallbackEditor) {
+      monacoEditor.setValue(clean);
+      if (cursorIndex >= 0) {
+        const pos = monacoEditor.getModel().getPositionAt(cursorIndex);
+        monacoEditor.setPosition(pos);
+        monacoEditor.focus();
+      }
+    } else if (usingFallbackEditor) {
+      const ta = document.getElementById('fallbackCodeArea');
+      ta.value = clean;
+      if (cursorIndex >= 0) ta.setSelectionRange(cursorIndex, cursorIndex);
+      ta.focus();
+    }
+    socket.emit('teacher:updateCode', { language: el('langSelect').value, content: clean });
+  }
+
+  el('insertStarterBtn').addEventListener('click', function () {
+    const lang = el('langSelect').value;
+    const starter = STARTERS[lang];
+    if (!starter) return;
+    if (currentEditorValue().trim() && !confirm('Replace the current code with a starter template for ' + lang.toUpperCase() + '?')) return;
+    applySnippet(starter);
+  });
+
+  // Emmet-style auto trigger: an empty C/C++ file expanding on "#", an empty
+  // HTML file expanding on "!" — mirrors the shortcuts teachers already know
+  // from VS Code, without pulling in a full Emmet engine for the MVP.
+  function maybeAutoSnippet(value) {
+    const lang = el('langSelect').value;
+    if (value === '#' && (lang === 'c' || lang === 'cpp')) return STARTERS[lang];
+    if (value === '!' && lang === 'html') return STARTERS.html;
+    return null;
+  }
+
+  // ------------------------------ live preview ------------------------------
+  function buildPreviewHtml(lang, content) {
+    if (lang === 'html') {
+      return /<html[\s>]/i.test(content) ? content : `<!DOCTYPE html><html><body>${content}</body></html>`;
+    }
+    if (lang === 'css') {
+      return `<!DOCTYPE html><html><head><style>${content}</style></head>
+        <body><h1>Heading</h1><p>Paragraph text to preview your CSS against.</p>
+        <button>Button</button></body></html>`;
+    }
+    if (lang === 'javascript') {
+      return `<!DOCTYPE html><html><body style="font-family:sans-serif;padding:14px;">
+        <div id="out" style="white-space:pre-wrap;font-family:monospace;font-size:13px;"></div>
+        <script>
+          const out = document.getElementById('out');
+          console.log = (...a) => { out.textContent += a.join(' ') + '\\n'; };
+        <\/script>
+        <script>${content}<\/script>
+        </body></html>`;
+    }
+    return `<!DOCTYPE html><html><body style="font-family:sans-serif;padding:20px;color:#888;">
+      Live Preview works for HTML, CSS and JavaScript.</body></html>`;
+  }
+
+  function updatePreview() {
+    const frame = el('previewFrame');
+    if (!frame || el('previewPanel').classList.contains('hidden')) return;
+    frame.srcdoc = buildPreviewHtml(el('langSelect').value, currentEditorValue());
+  }
+
+  el('previewToggle').addEventListener('change', function () {
+    el('previewPanel').classList.toggle('hidden', !this.checked);
+    socket.emit('teacher:previewToggle', { enabled: this.checked });
+    if (this.checked) updatePreview();
+    if (monacoReady && monacoEditor.layout) setTimeout(() => monacoEditor.layout(), 60);
+  });
+  el('previewCloseBtn').addEventListener('click', function () {
+    el('previewToggle').checked = false;
+    el('previewPanel').classList.add('hidden');
+    socket.emit('teacher:previewToggle', { enabled: false });
+  });
+
+  // ------------------------------ keystroke overlay toggle ------------------------------
+  function formatKey(e) {
+    if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return null;
+    const named = { ' ': 'Space', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Backspace: '⌫', Escape: 'Esc' };
+    const parts = [];
+    if (e.ctrlKey) parts.push('Ctrl');
+    if (e.metaKey) parts.push('Cmd');
+    if (e.altKey) parts.push('Alt');
+    if (e.shiftKey && e.key.length > 1) parts.push('Shift');
+    parts.push(named[e.key] || (e.key.length === 1 ? e.key : e.key));
+    return parts.join(' + ');
+  }
+
+  let keystrokesOn = false;
+  document.addEventListener('keydown', function (e) {
+    if (!keystrokesOn) return;
+    const label = formatKey(e);
+    if (label) socket.emit('teacher:keystroke', { label });
+  });
+
+  el('keystrokesToggle').addEventListener('change', function () {
+    keystrokesOn = this.checked;
+    socket.emit('teacher:keystrokesToggle', { enabled: keystrokesOn });
   });
 })();

@@ -24,6 +24,8 @@ function makeSession({ code, teacherName, subject, className, topic }) {
     locked: false,
     paused: false,
     ended: false,
+    previewEnabled: false,  // teacher's live-preview panel, mirrored to students
+    keystrokesEnabled: false, // "show my keypresses" toggle — off by default
 
     // The single "currently active" tab the students are looking at.
     mode: 'code', // 'code' | 'notes' | 'whiteboard'

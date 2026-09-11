@@ -61,6 +61,8 @@ function attachClassSocket(io) {
           board: session.board,
           locked: session.locked,
           paused: session.paused,
+          previewEnabled: session.previewEnabled,
+          keystrokesEnabled: session.keystrokesEnabled,
         },
         students: studentSummary(session),
       });
@@ -150,6 +152,28 @@ function attachClassSocket(io) {
       session.locked = !!locked;
     }));
 
+    // "Show my keypresses" — a VS Code-screencast-style overlay of each key
+    // the teacher presses, broadcast only while the teacher has it switched on.
+    socket.on('teacher:keystrokesToggle', ({ enabled } = {}) => withTeacherSession(socket, (session) => {
+      session.keystrokesEnabled = !!enabled;
+      io.to(roomFor(session.code)).emit('board:keystrokesToggled', { enabled: session.keystrokesEnabled });
+    }));
+
+    socket.on('teacher:keystroke', (payload = {}) => {
+      if (socket.data.role !== 'teacher') return;
+      const session = sessionStore.get(socket.data.sessionCode);
+      if (!session || !session.keystrokesEnabled) return;
+      const label = String(payload.label || '').slice(0, 24);
+      if (!label) return;
+      socket.to(roomFor(session.code)).emit('board:keystroke', { label });
+    });
+
+    // Live Preview — mirrors a rendered-HTML panel to students alongside the code.
+    socket.on('teacher:previewToggle', ({ enabled } = {}) => withTeacherSession(socket, (session) => {
+      session.previewEnabled = !!enabled;
+      io.to(roomFor(session.code)).emit('board:previewToggled', { enabled: session.previewEnabled });
+    }));
+
     socket.on('teacher:end', () => withTeacherSession(socket, (session) => {
       session.ended = true;
       io.to(roomFor(session.code)).emit('session:ended');
@@ -157,6 +181,22 @@ function attachClassSocket(io) {
       persistence.recordClassEnd(session.dbClassId); // fire-and-forget — the class is already over for everyone regardless
       sessionStore.remove(session.code);
     }));
+
+    // A student's raised hand is only ever shown to the teacher — it goes
+    // straight to the teacher's own socket, not broadcast to the room.
+    socket.on('student:raiseHand', ({ raised } = {}) => {
+      if (socket.data.role !== 'student' || !socket.data.sessionCode) return;
+      const session = sessionStore.get(socket.data.sessionCode);
+      if (!session) return;
+      const student = session.students.get(socket.data.studentId);
+      if (!student) return;
+      student.handRaised = !!raised;
+      if (session.teacherSocketId) {
+        io.to(session.teacherSocketId).emit('student:handRaised', {
+          studentId: student.id, name: student.name, raised: student.handRaised,
+        });
+      }
+    });
 
     // ------------------------------------------------------------ student
     socket.on('student:join', ({ code, studentName } = {}, ack) => {
@@ -186,6 +226,7 @@ function attachClassSocket(io) {
           mode: session.mode,
           board: session.board, // full current state — a late joiner is never shown a blank board
           paused: session.paused,
+          previewEnabled: session.previewEnabled,
         },
       });
 

@@ -17,6 +17,7 @@
         const now = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         apply(now);
         try { localStorage.setItem('lcb_theme', now); } catch (e) {}
+        window.dispatchEvent(new CustomEvent('lcb:theme-changed', { detail: { theme: now } }));
       });
     });
   });
