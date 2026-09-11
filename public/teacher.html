@@ -28,8 +28,8 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
     </nav>
 
     <div class="side-tools">
-      <label class="side-label" for="langSelect">Language</label>
-      <select id="langSelect">
+      <label class="side-label">Language</label>
+      <select id="langSelect" hidden>
         <option value="c">C</option>
         <option value="cpp">C++</option>
         <option value="java">Java</option>
@@ -39,6 +39,17 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
         <option value="css">CSS</option>
         <option value="sql">SQL</option>
       </select>
+
+      <div class="lang-grid" id="langGrid">
+        <button type="button" class="lang-btn on" data-lang="c" title="C"><span class="lang-icon lang-c">C</span></button>
+        <button type="button" class="lang-btn" data-lang="cpp" title="C++"><span class="lang-icon lang-cpp">C++</span></button>
+        <button type="button" class="lang-btn" data-lang="java" title="Java"><span class="lang-icon lang-java">☕</span></button>
+        <button type="button" class="lang-btn" data-lang="python" title="Python"><span class="lang-icon lang-python">🐍</span></button>
+        <button type="button" class="lang-btn" data-lang="javascript" title="JavaScript"><span class="lang-icon lang-js">JS</span></button>
+        <button type="button" class="lang-btn" data-lang="html" title="HTML"><span class="lang-icon lang-html">&lt;/&gt;</span></button>
+        <button type="button" class="lang-btn" data-lang="css" title="CSS"><span class="lang-icon lang-css">#</span></button>
+        <button type="button" class="lang-btn" data-lang="sql" title="SQL"><span class="lang-icon lang-sql">🗄</span></button>
+      </div>
 
       <button type="button" class="btn btn-ghost btn-sm btn-block" id="insertStarterBtn" style="margin-top:10px;">＋ Insert Starter Code</button>
 
@@ -129,6 +140,8 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
         </div>
 
       </section>
+
+      <div class="panel-resizer" id="panelResizer" title="Drag to resize"></div>
 
       <aside class="side-panel" id="sidePanel">
 

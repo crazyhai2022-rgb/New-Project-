@@ -69,6 +69,7 @@
 
     setMode(session.mode, { silent: true });
     el('langSelect').value = session.board.code.language;
+    document.querySelectorAll('.lang-btn').forEach((b) => b.classList.toggle('on', b.dataset.lang === session.board.code.language));
     applyCodeToEditor(session.board.code.content);
     el('notesArea').value = session.board.notes.content;
     replaceWhiteboard(session.board.whiteboard.strokes);
@@ -139,12 +140,10 @@
       monaco.editor.setTheme(currentMonacoTheme());
     });
 
+    registerSnippetSuggestions();
+
     let debounce = null;
     monacoEditor.onDidChangeModelContent(function () {
-      const val = monacoEditor.getValue();
-      const snippet = maybeAutoSnippet(val);
-      if (snippet) { applySnippet(snippet); return; }
-
       clearTimeout(debounce);
       debounce = setTimeout(function () {
         socket.emit('teacher:updateCode', {
@@ -156,6 +155,54 @@
     });
   }
 
+  // A real, dismissible suggestion — like VS Code's Emmet popup — rather
+  // than forcing the boilerplate on anyone who happens to type "#" or "!".
+  // Pressing Tab/Enter accepts it; typing on, or Escape, just drops it.
+  let snippetProvidersRegistered = false;
+  function registerSnippetSuggestions() {
+    if (snippetProvidersRegistered) return;
+    snippetProvidersRegistered = true;
+
+    monaco.languages.registerCompletionItemProvider('c', snippetProviderFor('c', '#'));
+    monaco.languages.registerCompletionItemProvider('cpp', snippetProviderFor('cpp', '#'));
+    monaco.languages.registerCompletionItemProvider('html', snippetProviderFor('html', '!'));
+  }
+
+  function snippetProviderFor(lang, triggerChar) {
+    return {
+      triggerCharacters: [triggerChar],
+      provideCompletionItems(model, position) {
+        // Only offer it on an otherwise-empty document — this is a starter
+        // template, not something useful mid-file.
+        if (model.getValueLength() > 1) return { suggestions: [] };
+
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber, endLineNumber: position.lineNumber,
+          startColumn: 1, endColumn: position.column,
+        };
+        const raw = STARTERS[lang].replace(CURSOR_MARK, '');
+        const label = lang === 'html' ? '! — HTML5 boilerplate' : '# — Starter code (#include + main)';
+
+        return {
+          suggestions: [{
+            label,
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            documentation: raw,
+            insertText: toMonacoSnippet(STARTERS[lang]),
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            range,
+          }],
+        };
+      },
+    };
+  }
+
+  /** Turns our ␘CURSOR␘ marker into Monaco's $0 final-cursor-stop syntax. */
+  function toMonacoSnippet(text) {
+    return text.replace(CURSOR_MARK, '$0');
+  }
+
   function useFallbackEditor() {
     if (usingFallbackEditor || monacoReady) return;
     usingFallbackEditor = true;
@@ -165,14 +212,13 @@
     ta.id = 'fallbackCodeArea';
     ta.style.cssText = 'width:100%;height:100%;border:none;padding:16px 20px;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.6;resize:none;background:var(--surface);color:var(--ink);';
     ta.value = pendingCodeApply || '';
-    ta.placeholder = 'Type your code here…';
+    ta.placeholder = 'Type your code here… (try # for C/C++ or ! for HTML on an empty file)';
     host.appendChild(ta);
+
+    setupFallbackSuggestionChip(ta);
 
     let debounce = null;
     ta.addEventListener('input', function () {
-      const snippet = maybeAutoSnippet(ta.value);
-      if (snippet) { applySnippet(snippet); return; }
-
       clearTimeout(debounce);
       debounce = setTimeout(function () {
         socket.emit('teacher:updateCode', { language: el('langSelect').value, content: ta.value });
@@ -199,6 +245,17 @@
     if (monacoReady && !usingFallbackEditor) monaco.editor.setModelLanguage(monacoEditor.getModel(), monacoLangFor(this.value));
     socket.emit('teacher:updateCode', { language: this.value, content: monacoReady ? monacoEditor.getValue() : '' });
     updatePreview();
+  });
+
+  // Colourful icon buttons drive the same hidden <select> everything else
+  // already listens to — nothing downstream needs to know the UI changed.
+  document.querySelectorAll('.lang-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.lang-btn').forEach((b) => b.classList.toggle('on', b === btn));
+      const select = el('langSelect');
+      select.value = btn.dataset.lang;
+      select.dispatchEvent(new Event('change'));
+    });
   });
 
   function monacoLangFor(v) {
@@ -462,6 +519,51 @@
     expandTab.addEventListener('click', () => setCollapsed(false));
   })();
 
+  // ------------------------------ drag-to-resize side panel ------------------------------
+  (function () {
+    const resizer = el('panelResizer');
+    const layout = document.querySelector('.layout');
+    if (!resizer || !layout) return;
+
+    const MIN_WIDTH = 240;
+    const MAX_WIDTH = 560;
+    let dragging = false;
+
+    resizer.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+      dragging = true;
+      resizer.classList.add('dragging');
+      document.body.style.userSelect = 'none';
+    });
+
+    window.addEventListener('mousemove', function (e) {
+      if (!dragging) return;
+      const width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, window.innerWidth - e.clientX - 26));
+      layout.style.setProperty('--panel-width', width + 'px');
+    });
+
+    window.addEventListener('mouseup', function () {
+      if (!dragging) return;
+      dragging = false;
+      resizer.classList.remove('dragging');
+      document.body.style.userSelect = '';
+      if (monacoReady && monacoEditor.layout) monacoEditor.layout();
+    });
+
+    // Touch support, for teachers on a tablet.
+    resizer.addEventListener('touchstart', function () { dragging = true; resizer.classList.add('dragging'); }, { passive: true });
+    window.addEventListener('touchmove', function (e) {
+      if (!dragging) return;
+      const x = e.touches[0].clientX;
+      const width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, window.innerWidth - x - 26));
+      layout.style.setProperty('--panel-width', width + 'px');
+    }, { passive: true });
+    window.addEventListener('touchend', function () {
+      dragging = false;
+      resizer.classList.remove('dragging');
+    });
+  })();
+
   // ------------------------------ starter code / snippets ------------------------------
   const CURSOR_MARK = '\u2038CURSOR\u2038';
   const STARTERS = {
@@ -507,14 +609,46 @@
     applySnippet(starter);
   });
 
-  // Emmet-style auto trigger: an empty C/C++ file expanding on "#", an empty
-  // HTML file expanding on "!" — mirrors the shortcuts teachers already know
-  // from VS Code, without pulling in a full Emmet engine for the MVP.
-  function maybeAutoSnippet(value) {
-    const lang = el('langSelect').value;
-    if (value === '#' && (lang === 'c' || lang === 'cpp')) return STARTERS[lang];
-    if (value === '!' && lang === 'html') return STARTERS.html;
-    return null;
+  // Emmet-style suggestion for the fallback textarea (no Monaco = no native
+  // suggestion widget): a small dismissible chip appears near the trigger
+  // character; Tab accepts it, Escape or continued typing dismisses it.
+  function setupFallbackSuggestionChip(ta) {
+    const chip = document.createElement('div');
+    chip.className = 'snippet-chip hidden';
+    ta.parentElement.style.position = 'relative';
+    ta.parentElement.appendChild(chip);
+
+    let pendingLang = null;
+
+    function hide() { chip.classList.add('hidden'); pendingLang = null; }
+
+    ta.addEventListener('input', function () {
+      const lang = el('langSelect').value;
+      const isTrigger =
+        (ta.value === '#' && (lang === 'c' || lang === 'cpp')) ||
+        (ta.value === '!' && lang === 'html');
+
+      if (!isTrigger) { hide(); return; }
+      pendingLang = lang;
+      chip.textContent = (lang === 'html' ? '! ' : '# ') + '→ Tab to insert starter code · Esc to dismiss';
+      chip.classList.remove('hidden');
+    });
+
+    ta.addEventListener('keydown', function (e) {
+      if (!pendingLang) return;
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        applySnippet(STARTERS[pendingLang]);
+        hide();
+      } else if (e.key === 'Escape') {
+        hide();
+      } else if (e.key.length === 1 || e.key === 'Backspace') {
+        // Any further typing abandons the suggestion, same as VS Code.
+        hide();
+      }
+    });
+
+    ta.addEventListener('blur', hide);
   }
 
   // ------------------------------ live preview ------------------------------
