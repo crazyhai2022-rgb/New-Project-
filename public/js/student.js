@@ -103,6 +103,7 @@
 
     socket.on('mode:changed', ({ mode }) => setMode(mode));
     socket.on('board:code', applyCode);
+    socket.on('board:cursorLine', ({ line }) => showCursorLine(line));
     socket.on('board:notes', (n) => applyNotes(n.content));
     socket.on('board:whiteboardStroke', drawIncomingStroke);
     socket.on('board:whiteboardReplace', ({ strokes }) => replaceWhiteboard(strokes));
@@ -140,9 +141,10 @@
 
   function setMode(mode) {
     el('vModeLabel').textContent = MODE_LABELS[mode] || mode;
-    el('codeView').classList.toggle('hidden', mode !== 'code');
+    el('codeViewWrap').classList.toggle('hidden', mode !== 'code');
     el('notesView').classList.toggle('hidden', mode !== 'notes');
     el('wbView').classList.toggle('hidden', mode !== 'whiteboard');
+    if (mode !== 'code') el('codeCursorLine').hidden = true;
   }
 
   let lastCodeState = { language: 'plaintext', content: '' };
@@ -150,13 +152,42 @@
   function applyCode(codeState) {
     lastCodeState = codeState || lastCodeState;
     const codeEl = el('codeViewInner');
-    codeEl.textContent = codeState.content || '';
+    const content = codeState.content || '';
+    codeEl.textContent = content;
     codeEl.className = 'language-' + (codeState.language || 'plaintext');
     if (window.hljs) {
       codeEl.removeAttribute('data-highlighted');
       hljs.highlightElement(codeEl);
     }
+    renderGutter(content);
     updateStudentPreview();
+  }
+
+  /** A line-number gutter, matching the teacher's editor — purely cosmetic,
+      built from the line count only, so it never touches (or risks
+      breaking) the syntax-highlighted markup next to it. */
+  /** Moves the "teacher is editing here" band to the right line — a simple
+      row-level highlight rather than a pixel-exact caret, so it stays
+      correct across fonts, wrapping, and every student's own zoom level. */
+  function showCursorLine(line) {
+    const bar = el('codeCursorLine');
+    const codeEl = el('codeViewInner');
+    if (!bar || !codeEl || !line || line < 1) return;
+
+    const lineHeight = parseFloat(getComputedStyle(codeEl).lineHeight) || 23;
+    const topPadding = parseFloat(getComputedStyle(codeEl.parentElement).paddingTop) || 0;
+    bar.style.top = (topPadding + (line - 1) * lineHeight) + 'px';
+    bar.style.height = lineHeight + 'px';
+    bar.hidden = false;
+  }
+
+  function renderGutter(content) {
+    const gutter = el('codeGutter');
+    if (!gutter) return;
+    const lineCount = Math.max(1, content.split('\n').length);
+    let html = '';
+    for (let i = 1; i <= lineCount; i++) html += i + '\n';
+    gutter.textContent = html.trimEnd();
   }
 
   function applyNotes(text) {

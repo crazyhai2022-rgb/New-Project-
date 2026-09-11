@@ -168,6 +168,17 @@ function attachClassSocket(io) {
       socket.to(roomFor(session.code)).emit('board:keystroke', { label });
     });
 
+    // Where the teacher's cursor currently sits in the code — always on,
+    // unlike the keystroke overlay, since this is what makes "teacher writes,
+    // student watches" actually feel like looking over their shoulder.
+    socket.on('teacher:cursorLine', ({ line } = {}) => {
+      if (socket.data.role !== 'teacher') return;
+      const session = sessionStore.get(socket.data.sessionCode);
+      const n = Number(line);
+      if (!session || !Number.isFinite(n) || n < 1) return;
+      socket.to(roomFor(session.code)).emit('board:cursorLine', { line: n });
+    });
+
     // Live Preview — mirrors a rendered-HTML panel to students alongside the code.
     socket.on('teacher:previewToggle', ({ enabled } = {}) => withTeacherSession(socket, (session) => {
       session.previewEnabled = !!enabled;

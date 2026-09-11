@@ -142,6 +142,12 @@
 
     registerSnippetSuggestions();
 
+    let cursorDebounce = null;
+    monacoEditor.onDidChangeCursorPosition(function (e) {
+      clearTimeout(cursorDebounce);
+      cursorDebounce = setTimeout(() => socket.emit('teacher:cursorLine', { line: e.position.lineNumber }), 120);
+    });
+
     let debounce = null;
     monacoEditor.onDidChangeModelContent(function () {
       clearTimeout(debounce);
@@ -216,6 +222,17 @@
     host.appendChild(ta);
 
     setupFallbackSuggestionChip(ta);
+
+    let cursorDebounce = null;
+    function emitCursorLine() {
+      clearTimeout(cursorDebounce);
+      cursorDebounce = setTimeout(function () {
+        const line = ta.value.slice(0, ta.selectionStart).split('\n').length;
+        socket.emit('teacher:cursorLine', { line });
+      }, 120);
+    }
+    ta.addEventListener('keyup', emitCursorLine);
+    ta.addEventListener('click', emitCursorLine);
 
     let debounce = null;
     ta.addEventListener('input', function () {

@@ -186,22 +186,23 @@
 .snippet-chip.hidden{ display:none; }
 
 /* ------------------------------ language icon grid ----------------------------- */
-.lang-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:7px; padding:0 6px; }
+.lang-grid{ display:flex; flex-direction:column; gap:5px; padding:0 6px; }
 .lang-btn{
-  aspect-ratio:1; border-radius:10px; border:2px solid transparent; background:rgba(255,255,255,.06);
-  cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; transition:border-color .15s, transform .15s;
+  display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:9px; border:2px solid transparent;
+  background:rgba(255,255,255,.06); cursor:pointer; transition:border-color .15s, background .15s;
 }
-.lang-btn:hover{ transform:translateY(-1px); }
-.lang-btn.on{ border-color:var(--gold); background:rgba(242,181,48,.12); }
+.lang-btn:hover{ background:rgba(255,255,255,.1); }
+.lang-btn.on{ border-color:var(--gold); background:rgba(242,181,48,.14); }
+.lang-name{ font-size:12.5px; font-weight:600; color:rgba(255,255,255,.85); }
 .lang-icon{
-  width:78%; height:78%; border-radius:7px; display:flex; align-items:center; justify-content:center;
-  font-size:11px; font-weight:800; font-family:'Poppins',sans-serif; color:#fff; letter-spacing:-.02em;
+  flex:0 0 auto; width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:800; font-family:'Poppins',sans-serif; color:#fff; letter-spacing:-.02em;
 }
 .lang-c{ background:#5c6bc0; }
-.lang-cpp{ background:#00599c; font-size:9.5px; }
-.lang-java{ background:#f89820; font-size:16px; }
-.lang-python{ background:#3776ab; font-size:16px; }
+.lang-cpp{ background:#00599c; font-size:8.5px; }
+.lang-java{ background:#f89820; font-size:14px; }
+.lang-python{ background:#3776ab; font-size:14px; }
 .lang-js{ background:#f7df1e; color:#1b2334; }
-.lang-html{ background:#e34f26; font-size:12px; }
-.lang-css{ background:#1572b6; font-size:16px; }
-.lang-sql{ background:#607d8b; font-size:16px; }
+.lang-html{ background:#e34f26; font-size:10.5px; }
+.lang-css{ background:#1572b6; font-size:14px; }
+.lang-sql{ background:#607d8b; font-size:14px; }

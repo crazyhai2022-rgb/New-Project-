@@ -68,7 +68,11 @@ document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
   <div class="viewer-stage" id="viewerStage">
     <div class="stage-zoomable" id="stageZoomable">
 
-      <pre class="code-view hidden" id="codeView"><code id="codeViewInner"></code></pre>
+      <div class="code-view-wrap hidden" id="codeViewWrap">
+        <div class="code-gutter" id="codeGutter">1</div>
+        <div class="code-cursor-line" id="codeCursorLine" hidden></div>
+        <pre class="code-view" id="codeView"><code id="codeViewInner"></code></pre>
+      </div>
 
       <div class="notes-view hidden" id="notesView"></div>
 
