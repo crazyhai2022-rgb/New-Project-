@@ -27,19 +27,7 @@
 .muted{ color:var(--muted); font-size:13px; }
 .topbar-actions{ display:flex; align-items:center; gap:10px; }
 
-.layout{
-  flex:1; display:grid; grid-template-columns:1fr 6px var(--panel-width, 320px);
-  gap:10px; padding:20px 26px 40px; align-items:start;
-}
-.panel-resizer{
-  align-self:stretch; width:6px; cursor:col-resize; position:relative; z-index:10;
-}
-.panel-resizer::after{
-  content:""; position:absolute; left:2px; top:0; bottom:0; width:2px; border-radius:2px;
-  background:var(--line-2); transition:background .15s;
-}
-.panel-resizer:hover::after, .panel-resizer.dragging::after{ background:var(--gold); }
-.layout.panel-collapsed .panel-resizer{ display:none; }
+.layout{ flex:1; display:grid; grid-template-columns:1fr 320px; gap:20px; padding:20px 26px 40px; align-items:start; }
 
 .board-panel{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); overflow:hidden; }
 .mode-tabs{ display:flex; border-bottom:1px solid var(--line); background:var(--page); }
@@ -116,7 +104,6 @@
 @media (max-width:1100px){
   .layout{ grid-template-columns:1fr; }
   .side-panel{ position:static; }
-  .panel-resizer{ display:none; }
 }
 @media (max-width:820px){
   .side{ transform:translateX(-100%); }
@@ -136,16 +123,6 @@
   font-size:12.5px; color:rgba(255,255,255,.75); cursor:pointer; line-height:1.4;
 }
 .side-switch input{ width:auto; accent-color:var(--gold); flex-shrink:0; margin-top:1px; }
-
-/* ------------------------------ collapsible panel --------------------------- */
-.layout.panel-collapsed{ grid-template-columns:1fr !important; }
-.layout.panel-collapsed .side-panel{ display:none; }
-.panel-expand-tab{
-  position:fixed; top:50%; right:0; transform:translateY(-50%); z-index:40;
-  width:26px; height:56px; border-radius:8px 0 0 8px; border:1px solid var(--line-2); border-right:none;
-  background:var(--surface); color:var(--body); cursor:pointer; box-shadow:var(--shadow); font-size:16px;
-}
-.panel-expand-tab.hidden{ display:none; }
 
 /* -------------------------------- live preview ------------------------------ */
 .preview-panel{ border-top:1px solid var(--line); display:flex; flex-direction:column; height:260px; }

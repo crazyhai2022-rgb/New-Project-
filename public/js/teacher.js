@@ -520,66 +520,6 @@
     }
   });
 
-  // ------------------------------ collapsible side panel ------------------------------
-  (function () {
-    const layout = document.querySelector('.layout');
-    const collapseBtn = el('collapsePanelBtn');
-    const expandTab = el('expandPanelBtn');
-    if (!layout || !collapseBtn || !expandTab) return;
-
-    function setCollapsed(collapsed) {
-      layout.classList.toggle('panel-collapsed', collapsed);
-      expandTab.classList.toggle('hidden', !collapsed);
-      if (monacoReady && monacoEditor.layout) setTimeout(() => monacoEditor.layout(), 60);
-    }
-    collapseBtn.addEventListener('click', () => setCollapsed(true));
-    expandTab.addEventListener('click', () => setCollapsed(false));
-  })();
-
-  // ------------------------------ drag-to-resize side panel ------------------------------
-  (function () {
-    const resizer = el('panelResizer');
-    const layout = document.querySelector('.layout');
-    if (!resizer || !layout) return;
-
-    const MIN_WIDTH = 240;
-    const MAX_WIDTH = 560;
-    let dragging = false;
-
-    resizer.addEventListener('mousedown', function (e) {
-      e.preventDefault();
-      dragging = true;
-      resizer.classList.add('dragging');
-      document.body.style.userSelect = 'none';
-    });
-
-    window.addEventListener('mousemove', function (e) {
-      if (!dragging) return;
-      const width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, window.innerWidth - e.clientX - 26));
-      layout.style.setProperty('--panel-width', width + 'px');
-    });
-
-    window.addEventListener('mouseup', function () {
-      if (!dragging) return;
-      dragging = false;
-      resizer.classList.remove('dragging');
-      document.body.style.userSelect = '';
-      if (monacoReady && monacoEditor.layout) monacoEditor.layout();
-    });
-
-    // Touch support, for teachers on a tablet.
-    resizer.addEventListener('touchstart', function () { dragging = true; resizer.classList.add('dragging'); }, { passive: true });
-    window.addEventListener('touchmove', function (e) {
-      if (!dragging) return;
-      const x = e.touches[0].clientX;
-      const width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, window.innerWidth - x - 26));
-      layout.style.setProperty('--panel-width', width + 'px');
-    }, { passive: true });
-    window.addEventListener('touchend', function () {
-      dragging = false;
-      resizer.classList.remove('dragging');
-    });
-  })();
 
   // ------------------------------ starter code / snippets ------------------------------
   const CURSOR_MARK = '\u2038CURSOR\u2038';
